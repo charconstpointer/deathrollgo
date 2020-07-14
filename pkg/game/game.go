@@ -5,11 +5,7 @@ import "errors"
 type queue []Player
 type Game struct {
 	players queue
-}
-
-type Multiplayer interface {
-	AddPlayer(p *Player) error
-	RemovePlayer(p *Player) error
+	actions int
 }
 
 func (g *Game) AddPlayer(p *Player) error {
@@ -29,6 +25,18 @@ func (g *Game) RemovePlayer(p *Player) error {
 		}
 	}
 	return errors.New("Player not found")
+}
+
+func (g *Game) NextPlayer() *Player {
+	pc := len(g.players)
+	next := g.actions % pc
+	return &g.players[next]
+}
+
+func (g *Game) Roll() (uint64, int) {
+	current := g.NextPlayer()
+	g.actions++
+	return current.id, 1
 }
 
 func (g *Game) GetPlayers() []Player {

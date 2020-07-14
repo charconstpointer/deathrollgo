@@ -51,3 +51,44 @@ func TestGetPlayers(t *testing.T) {
 		t.Errorf("Expected %d player, found %d", 1, len(players))
 	}
 }
+
+func TestNextPlayer(t *testing.T) {
+	g := NewGame()
+	p1 := NewPlayer(1, "foo")
+	p2 := NewPlayer(2, "bar")
+	err := g.AddPlayer(p1)
+	if err != nil {
+		t.Errorf("%s", err.Error())
+	}
+	err = g.AddPlayer(p2)
+	if err != nil {
+		t.Errorf("%s", err.Error())
+	}
+	next := g.NextPlayer()
+	if next.id != p1.id {
+		t.Errorf("Wrong order")
+	}
+	_, _ = g.Roll()
+	next = g.NextPlayer()
+	if next.id != p2.id {
+		t.Errorf("Wrong order")
+	}
+}
+
+func TestRoll(t *testing.T) {
+	g := NewGame()
+	p1 := NewPlayer(1, "foo")
+	err := g.AddPlayer(p1)
+	if err != nil {
+		t.Errorf("%s", err.Error())
+	}
+	id, roll := g.Roll()
+	if id != p1.id {
+		t.Errorf("Wrong player, expected %d", p1.id)
+	}
+
+	if roll < 0 {
+		t.Errorf("Expected roll to be greater than 0, got %d", roll)
+	}
+
+}
