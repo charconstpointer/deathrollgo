@@ -1,0 +1,38 @@
+syntax = "proto3";
+package game;
+
+option go_package = "pkg/game/api";
+
+service GameService {
+        rpc StartGame (StartGameRequest) returns (StartGameResponse);
+        rpc AddPlayer (AddPlayerRequest) returns (AddPlayerResponse);
+        rpc Roll (RollRequest) returns (RollResponse);
+}
+//limit describes inital value for deathroll random's upper bound limit
+message StartGameRequest {
+        int32 limit = 1;
+}
+
+message StartGameResponse {
+
+}
+//userId is unique user's discord identifier
+message AddPlayerRequest {
+        uint64 userId = 1;
+}
+//returns whether or not adding was successfull
+message AddPlayerResponse {
+        bool added = 1;
+}
+
+message RollRequest {
+        uint64 userId = 1;
+}
+//describes roll parameters and limits, if roll wasnt successfull we should send an error via optional filed error
+message RollResponse {
+        bool success = 1;
+        string error = 2;
+        int32 low = 3;
+        int32 high = 4;
+        int32 value = 5;
+}
