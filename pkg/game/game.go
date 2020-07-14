@@ -1,11 +1,16 @@
 package game
 
-import "errors"
+import (
+	"errors"
+	"log"
+	"math/rand"
+)
 
 type queue []Player
 type Game struct {
 	players queue
 	actions int
+	limit   int
 }
 
 func (g *Game) AddPlayer(p *Player) error {
@@ -29,20 +34,52 @@ func (g *Game) RemovePlayer(p *Player) error {
 
 func (g *Game) NextPlayer() *Player {
 	pc := len(g.players)
-	next := g.actions % pc
-	return &g.players[next]
+	if pc > 1 {
+		next := g.actions % pc
+		return &g.players[next]
+	}
+	return nil
 }
 
-func (g *Game) Roll() (uint64, int) {
+func (g *Game) Roll() (uint64, int, error) {
 	current := g.NextPlayer()
+	pc := len(g.players)
+	if current == nil {
+		return 0, 0, errors.New("Not enough players")
+	}
+	log.Printf("Player %v rolling %d - %d", current, 0, g.limit)
+	roll := rand.Intn(g.limit)
+	if pc == 2 {
+		g.limit = roll
+	}
+	if g.actions > 0 && g.actions%pc == 0 && pc > 2 {
+		loser := g.pickLoser()
+		log.Printf("%v lost", loser)
+		g.RemovePlayer(&loser)
+		g.actions = 0
+	}
 	g.actions++
-	return current.id, 1
+	current.score = roll
+	return current.id, roll, nil
+}
+
+func (g *Game) pickLoser() Player {
+	var loser Player
+	for i, p := range g.players {
+		if i == 0 {
+			loser = p
+		}
+		if p.score < loser.score {
+			loser = p
+		}
+	}
+	return loser
 }
 
 func (g *Game) GetPlayers() []Player {
 	return g.players
 }
 
-func NewGame() *Game {
-	return &Game{}
+func NewGame(limit int) *Game {
+	return &Game{actions: 0, limit: limit}
 }
