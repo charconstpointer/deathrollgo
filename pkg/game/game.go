@@ -15,7 +15,7 @@ type Game struct {
 
 func (g *Game) AddPlayer(p *Player) error {
 	for _, pl := range g.players {
-		if p.id == pl.id {
+		if p.Id == pl.Id {
 			return errors.New("Player is already in the game")
 		}
 	}
@@ -25,27 +25,33 @@ func (g *Game) AddPlayer(p *Player) error {
 
 func (g *Game) RemovePlayer(p *Player) error {
 	for i, pl := range g.players {
-		if p.id == pl.id {
+		if p.Id == pl.Id {
 			g.players = append(g.players[:i], g.players[i+1:]...)
 		}
 	}
 	return errors.New("Player not found")
 }
 
-func (g *Game) NextPlayer() *Player {
+func (g *Game) GetLimit() int {
+	return g.limit
+}
+
+func (g *Game) NextPlayer() (*Player, error) {
 	pc := len(g.players)
-	if pc > 1 {
-		next := g.actions % pc
-		return &g.players[next]
+	if pc == 0 {
+		return nil, errors.New("No players in the game")
 	}
-	if pc == 1 {
-		return &g.players[0]
-	}
-	return nil
+
+	next := g.actions % pc
+	return &g.players[next], nil
+
 }
 
 func (g *Game) Roll() (uint64, int, error) {
-	current := g.NextPlayer()
+	current, err := g.NextPlayer()
+	if err != nil {
+		log.Printf("%s", err.Error())
+	}
 	pc := len(g.players)
 	if current == nil {
 		return 0, 0, errors.New("Not enough players")
@@ -63,7 +69,7 @@ func (g *Game) Roll() (uint64, int, error) {
 	}
 	g.actions++
 	current.score = roll
-	return current.id, roll, nil
+	return current.Id, roll, nil
 }
 
 func (g *Game) pickLoser() Player {

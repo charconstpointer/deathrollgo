@@ -6,6 +6,7 @@ option go_package = "pkg/game/api";
 service GameService {
         rpc StartGame (StartGameRequest) returns (StartGameResponse);
         rpc AddPlayer (AddPlayerRequest) returns (AddPlayerResponse);
+        rpc GetNextPlayer (GetNextPlayerRequest) returns (GetNextPlayerResponse);
         rpc Roll (RollRequest) returns (RollResponse);
 }
 //limit describes inital value for deathroll random's upper bound limit
@@ -35,4 +36,12 @@ message RollResponse {
         int32 low = 3;
         int32 high = 4;
         int32 value = 5;
+        uint64 userId = 6;
+}
+
+message GetNextPlayerRequest {
+}
+
+message GetNextPlayerResponse {
+        uint64 userId = 1;
 }

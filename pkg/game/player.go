@@ -1,14 +1,12 @@
 package game
 
 type Player struct {
-	id    uint64
-	name  string
+	Id    uint64
 	score int
 }
 
-func NewPlayer(id uint64, name string) *Player {
+func NewPlayer(id uint64) *Player {
 	return &Player{
-		id:   id,
-		name: name,
+		Id: id,
 	}
 }

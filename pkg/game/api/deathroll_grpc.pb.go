@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion6
 type GameServiceClient interface {
 	StartGame(ctx context.Context, in *StartGameRequest, opts ...grpc.CallOption) (*StartGameResponse, error)
 	AddPlayer(ctx context.Context, in *AddPlayerRequest, opts ...grpc.CallOption) (*AddPlayerResponse, error)
+	GetNextPlayer(ctx context.Context, in *GetNextPlayerRequest, opts ...grpc.CallOption) (*GetNextPlayerResponse, error)
 	Roll(ctx context.Context, in *RollRequest, opts ...grpc.CallOption) (*RollResponse, error)
 }
 
@@ -48,6 +49,15 @@ func (c *gameServiceClient) AddPlayer(ctx context.Context, in *AddPlayerRequest,
 	return out, nil
 }
 
+func (c *gameServiceClient) GetNextPlayer(ctx context.Context, in *GetNextPlayerRequest, opts ...grpc.CallOption) (*GetNextPlayerResponse, error) {
+	out := new(GetNextPlayerResponse)
+	err := c.cc.Invoke(ctx, "/api.GameService/GetNextPlayer", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *gameServiceClient) Roll(ctx context.Context, in *RollRequest, opts ...grpc.CallOption) (*RollResponse, error) {
 	out := new(RollResponse)
 	err := c.cc.Invoke(ctx, "/api.GameService/Roll", in, out, opts...)
@@ -63,6 +73,7 @@ func (c *gameServiceClient) Roll(ctx context.Context, in *RollRequest, opts ...g
 type GameServiceServer interface {
 	StartGame(context.Context, *StartGameRequest) (*StartGameResponse, error)
 	AddPlayer(context.Context, *AddPlayerRequest) (*AddPlayerResponse, error)
+	GetNextPlayer(context.Context, *GetNextPlayerRequest) (*GetNextPlayerResponse, error)
 	Roll(context.Context, *RollRequest) (*RollResponse, error)
 	mustEmbedUnimplementedGameServiceServer()
 }
@@ -76,6 +87,9 @@ func (*UnimplementedGameServiceServer) StartGame(context.Context, *StartGameRequ
 }
 func (*UnimplementedGameServiceServer) AddPlayer(context.Context, *AddPlayerRequest) (*AddPlayerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddPlayer not implemented")
+}
+func (*UnimplementedGameServiceServer) GetNextPlayer(context.Context, *GetNextPlayerRequest) (*GetNextPlayerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNextPlayer not implemented")
 }
 func (*UnimplementedGameServiceServer) Roll(context.Context, *RollRequest) (*RollResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Roll not implemented")
@@ -122,6 +136,24 @@ func _GameService_AddPlayer_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GameService_GetNextPlayer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNextPlayerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServiceServer).GetNextPlayer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.GameService/GetNextPlayer",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServiceServer).GetNextPlayer(ctx, req.(*GetNextPlayerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GameService_Roll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RollRequest)
 	if err := dec(in); err != nil {
@@ -151,6 +183,10 @@ var _GameService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddPlayer",
 			Handler:    _GameService_AddPlayer_Handler,
+		},
+		{
+			MethodName: "GetNextPlayer",
+			Handler:    _GameService_GetNextPlayer_Handler,
 		},
 		{
 			MethodName: "Roll",
