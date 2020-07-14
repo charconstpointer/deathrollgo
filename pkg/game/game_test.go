@@ -6,7 +6,7 @@ import (
 )
 
 func TestAddPlayer(t *testing.T) {
-	g := NewGame()
+	g := NewGame(1000)
 	p := NewPlayer(1, "foo")
 	err := g.AddPlayer(p)
 	if err != nil {
@@ -23,7 +23,7 @@ func TestAddPlayer(t *testing.T) {
 }
 
 func TestRemovePlayer(t *testing.T) {
-	g := NewGame()
+	g := NewGame(1000)
 	p := NewPlayer(1, "foo")
 	err := g.AddPlayer(p)
 	if err != nil {
@@ -40,20 +40,20 @@ func TestRemovePlayer(t *testing.T) {
 }
 
 func TestGetPlayers(t *testing.T) {
-	g := NewGame()
+	g := NewGame(1000)
 	p := NewPlayer(1, "foo")
 	err := g.AddPlayer(p)
 	if err != nil {
 		log.Printf("%s", err.Error())
 	}
 	players := g.GetPlayers()
-	if len(players) != 0 {
+	if len(players) != 1 {
 		t.Errorf("Expected %d player, found %d", 1, len(players))
 	}
 }
 
 func TestNextPlayer(t *testing.T) {
-	g := NewGame()
+	g := NewGame(1000)
 	p1 := NewPlayer(1, "foo")
 	p2 := NewPlayer(2, "bar")
 	err := g.AddPlayer(p1)
@@ -68,7 +68,10 @@ func TestNextPlayer(t *testing.T) {
 	if next.id != p1.id {
 		t.Errorf("Wrong order")
 	}
-	_, _ = g.Roll()
+	_, _, err = g.Roll()
+	if err != nil {
+		t.Errorf("%s", err.Error())
+	}
 	next = g.NextPlayer()
 	if next.id != p2.id {
 		t.Errorf("Wrong order")
@@ -76,13 +79,21 @@ func TestNextPlayer(t *testing.T) {
 }
 
 func TestRoll(t *testing.T) {
-	g := NewGame()
+	g := NewGame(1000)
 	p1 := NewPlayer(1, "foo")
+	p2 := NewPlayer(2, "bar")
 	err := g.AddPlayer(p1)
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
-	id, roll := g.Roll()
+	err = g.AddPlayer(p2)
+	if err != nil {
+		t.Errorf("%s", err.Error())
+	}
+	id, roll, err := g.Roll()
+	if err != nil {
+		t.Errorf("%s", err.Error())
+	}
 	if id != p1.id {
 		t.Errorf("Wrong player, expected %d", p1.id)
 	}
