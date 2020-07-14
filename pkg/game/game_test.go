@@ -55,16 +55,17 @@ func TestGetPlayers(t *testing.T) {
 func TestNextPlayer(t *testing.T) {
 	g := NewGame(1000)
 	p1 := NewPlayer(1, "foo")
-	p2 := NewPlayer(2, "bar")
-	err := g.AddPlayer(p1)
-	if err != nil {
-		t.Errorf("%s", err.Error())
-	}
-	err = g.AddPlayer(p2)
-	if err != nil {
-		t.Errorf("%s", err.Error())
-	}
+	g.AddPlayer(p1)
 	next := g.NextPlayer()
+	if next.id != p1.id {
+		t.Errorf("Wrong player, expected %d", p1.id)
+	}
+	p2 := NewPlayer(2, "bar")
+	err := g.AddPlayer(p2)
+	if err != nil {
+		t.Errorf("%s", err.Error())
+	}
+	next = g.NextPlayer()
 	if next.id != p1.id {
 		t.Errorf("Wrong order")
 	}

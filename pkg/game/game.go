@@ -38,6 +38,9 @@ func (g *Game) NextPlayer() *Player {
 		next := g.actions % pc
 		return &g.players[next]
 	}
+	if pc == 1 {
+		return &g.players[0]
+	}
 	return nil
 }
 
