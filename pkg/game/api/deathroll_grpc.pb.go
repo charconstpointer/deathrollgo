@@ -32,7 +32,7 @@ func NewGameServiceClient(cc grpc.ClientConnInterface) GameServiceClient {
 
 func (c *gameServiceClient) StartGame(ctx context.Context, in *StartGameRequest, opts ...grpc.CallOption) (*StartGameResponse, error) {
 	out := new(StartGameResponse)
-	err := c.cc.Invoke(ctx, "/game.GameService/StartGame", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/api.GameService/StartGame", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (c *gameServiceClient) StartGame(ctx context.Context, in *StartGameRequest,
 
 func (c *gameServiceClient) AddPlayer(ctx context.Context, in *AddPlayerRequest, opts ...grpc.CallOption) (*AddPlayerResponse, error) {
 	out := new(AddPlayerResponse)
-	err := c.cc.Invoke(ctx, "/game.GameService/AddPlayer", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/api.GameService/AddPlayer", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (c *gameServiceClient) AddPlayer(ctx context.Context, in *AddPlayerRequest,
 
 func (c *gameServiceClient) Roll(ctx context.Context, in *RollRequest, opts ...grpc.CallOption) (*RollResponse, error) {
 	out := new(RollResponse)
-	err := c.cc.Invoke(ctx, "/game.GameService/Roll", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/api.GameService/Roll", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func _GameService_StartGame_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/game.GameService/StartGame",
+		FullMethod: "/api.GameService/StartGame",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GameServiceServer).StartGame(ctx, req.(*StartGameRequest))
@@ -114,7 +114,7 @@ func _GameService_AddPlayer_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/game.GameService/AddPlayer",
+		FullMethod: "/api.GameService/AddPlayer",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GameServiceServer).AddPlayer(ctx, req.(*AddPlayerRequest))
@@ -132,7 +132,7 @@ func _GameService_Roll_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/game.GameService/Roll",
+		FullMethod: "/api.GameService/Roll",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GameServiceServer).Roll(ctx, req.(*RollRequest))
@@ -141,7 +141,7 @@ func _GameService_Roll_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 var _GameService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "game.GameService",
+	ServiceName: "api.GameService",
 	HandlerType: (*GameServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

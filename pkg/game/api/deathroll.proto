@@ -1,5 +1,5 @@
 syntax = "proto3";
-package game;
+package api;
 
 option go_package = "pkg/game/api";
 
