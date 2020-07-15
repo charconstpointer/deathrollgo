@@ -77,11 +77,20 @@ func (s *Server) GetGameEvents(r *GetGameEventsRequest, stream GameService_GetGa
 	log.Printf("Listening for events")
 	for {
 		select {
-		case e := <-s.game.Losers:
-			log.Infof("Event:Player %v lost", e)
+		case l := <-s.game.Losers:
+			log.Infof("Event:Player %v lost", l)
 			event := &GetGameEventsResponse{
-				UserId: e.Id,
+				UserId: l.Id,
 				Event:  GameEvent_PlayerLost,
+			}
+			if err := stream.Send(event); err != nil {
+				return err
+			}
+		case w := <-s.game.Winner:
+			log.Infof("Event:Player %v won", w)
+			event := &GetGameEventsResponse{
+				UserId: w.Id,
+				Event:  GameEvent_PlayerWon,
 			}
 			if err := stream.Send(event); err != nil {
 				return err

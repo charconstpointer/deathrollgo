@@ -12,6 +12,7 @@ type Game struct {
 	actions int
 	limit   int
 	Losers  chan Player
+	Winner  chan Player
 }
 
 func (g *Game) AddPlayer(p *Player) error {
@@ -57,12 +58,15 @@ func (g *Game) Roll() (uint64, int, error) {
 	if current == nil {
 		return 0, 0, errors.New("Not enough players")
 	}
-	log.Printf("Player %v rolling %d - %d", current, 0, g.limit)
+	log.Printf("Player : %d rolling (%d - %d)", current.Id, 0, g.limit)
 	roll := rand.Intn(g.limit)
 	//final stage
 	if pc == 2 {
 		if roll == 0 {
 			g.Losers <- *current
+			g.RemovePlayer(current)
+			w := g.players[0]
+			g.Winner <- w
 			log.Printf("=====GAME OVER=====")
 			return current.Id, roll, nil
 		}
@@ -103,5 +107,6 @@ func NewGame(limit int) *Game {
 		actions: 0,
 		limit:   limit,
 		Losers:  make(chan Player),
+		Winner:  make(chan Player, 1),
 	}
 }
