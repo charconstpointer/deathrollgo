@@ -8,11 +8,12 @@ import (
 
 type queue []Player
 type Game struct {
-	players queue
-	actions int
-	limit   int
-	Losers  chan Player
-	Winner  chan Player
+	players  queue
+	actions  int
+	limit    int
+	finished bool
+	Losers   chan Player
+	Winner   chan Player
 }
 
 func (g *Game) AddPlayer(p *Player) error {
@@ -50,6 +51,9 @@ func (g *Game) NextPlayer() (*Player, error) {
 }
 
 func (g *Game) Roll() (uint64, int, error) {
+	if g.finished {
+		return 0, 0, errors.New("This game is finished")
+	}
 	current, err := g.NextPlayer()
 	if err != nil {
 		log.Printf("%s", err.Error())
@@ -62,15 +66,8 @@ func (g *Game) Roll() (uint64, int, error) {
 	roll := rand.Intn(g.limit)
 	//final stage
 	if pc == 2 {
-		if roll == 0 {
-			g.Losers <- *current
-			g.RemovePlayer(current)
-			w := g.players[0]
-			g.Winner <- w
-			log.Printf("=====GAME OVER=====")
-			return current.Id, roll, nil
-		}
-		g.limit = roll
+		g.headsUp(current, roll)
+		return current.Id, roll, nil
 	}
 	//picks a loser after full round
 	if g.actions > 0 && g.actions%pc == 0 && pc > 2 {
@@ -83,6 +80,17 @@ func (g *Game) Roll() (uint64, int, error) {
 	g.actions++
 	current.score = roll
 	return current.Id, roll, nil
+}
+
+func (g *Game) headsUp(p *Player, roll int) {
+	if roll == 0 {
+		g.Losers <- *p
+		g.RemovePlayer(p)
+		w := g.players[0]
+		g.Winner <- w
+		g.finished = true
+	}
+	g.limit = roll
 }
 
 func (g *Game) pickLoser() Player {
@@ -104,9 +112,10 @@ func (g *Game) GetPlayers() []Player {
 
 func NewGame(limit int) *Game {
 	return &Game{
-		actions: 0,
-		limit:   limit,
-		Losers:  make(chan Player),
-		Winner:  make(chan Player, 1),
+		actions:  0,
+		finished: false,
+		limit:    limit,
+		Losers:   make(chan Player),
+		Winner:   make(chan Player, 1),
 	}
 }
