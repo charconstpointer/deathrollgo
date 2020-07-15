@@ -14,11 +14,11 @@ func main() {
 
 	lis, err := net.Listen("tcp", "0.0.0.0:8080")
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Errorf("failed to listen: %v", err)
 	}
-	s := api.Server{}
+	s := api.NewServer()
 	gs := grpc.NewServer()
 
-	api.RegisterGameServiceServer(gs, &s)
+	api.RegisterGameServiceServer(gs, s)
 	gs.Serve(lis)
 }

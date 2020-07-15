@@ -21,6 +21,7 @@ type GameServiceClient interface {
 	AddPlayer(ctx context.Context, in *AddPlayerRequest, opts ...grpc.CallOption) (*AddPlayerResponse, error)
 	GetNextPlayer(ctx context.Context, in *GetNextPlayerRequest, opts ...grpc.CallOption) (*GetNextPlayerResponse, error)
 	Roll(ctx context.Context, in *RollRequest, opts ...grpc.CallOption) (*RollResponse, error)
+	GetGameEvents(ctx context.Context, in *GetGameEventsRequest, opts ...grpc.CallOption) (GameService_GetGameEventsClient, error)
 }
 
 type gameServiceClient struct {
@@ -67,6 +68,38 @@ func (c *gameServiceClient) Roll(ctx context.Context, in *RollRequest, opts ...g
 	return out, nil
 }
 
+func (c *gameServiceClient) GetGameEvents(ctx context.Context, in *GetGameEventsRequest, opts ...grpc.CallOption) (GameService_GetGameEventsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_GameService_serviceDesc.Streams[0], "/api.GameService/GetGameEvents", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &gameServiceGetGameEventsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type GameService_GetGameEventsClient interface {
+	Recv() (*GetGameEventsResponse, error)
+	grpc.ClientStream
+}
+
+type gameServiceGetGameEventsClient struct {
+	grpc.ClientStream
+}
+
+func (x *gameServiceGetGameEventsClient) Recv() (*GetGameEventsResponse, error) {
+	m := new(GetGameEventsResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // GameServiceServer is the server API for GameService service.
 // All implementations must embed UnimplementedGameServiceServer
 // for forward compatibility
@@ -75,6 +108,7 @@ type GameServiceServer interface {
 	AddPlayer(context.Context, *AddPlayerRequest) (*AddPlayerResponse, error)
 	GetNextPlayer(context.Context, *GetNextPlayerRequest) (*GetNextPlayerResponse, error)
 	Roll(context.Context, *RollRequest) (*RollResponse, error)
+	GetGameEvents(*GetGameEventsRequest, GameService_GetGameEventsServer) error
 	mustEmbedUnimplementedGameServiceServer()
 }
 
@@ -93,6 +127,9 @@ func (*UnimplementedGameServiceServer) GetNextPlayer(context.Context, *GetNextPl
 }
 func (*UnimplementedGameServiceServer) Roll(context.Context, *RollRequest) (*RollResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Roll not implemented")
+}
+func (*UnimplementedGameServiceServer) GetGameEvents(*GetGameEventsRequest, GameService_GetGameEventsServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetGameEvents not implemented")
 }
 func (*UnimplementedGameServiceServer) mustEmbedUnimplementedGameServiceServer() {}
 
@@ -172,6 +209,27 @@ func _GameService_Roll_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GameService_GetGameEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetGameEventsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(GameServiceServer).GetGameEvents(m, &gameServiceGetGameEventsServer{stream})
+}
+
+type GameService_GetGameEventsServer interface {
+	Send(*GetGameEventsResponse) error
+	grpc.ServerStream
+}
+
+type gameServiceGetGameEventsServer struct {
+	grpc.ServerStream
+}
+
+func (x *gameServiceGetGameEventsServer) Send(m *GetGameEventsResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 var _GameService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "api.GameService",
 	HandlerType: (*GameServiceServer)(nil),
@@ -193,6 +251,12 @@ var _GameService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _GameService_Roll_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetGameEvents",
+			Handler:       _GameService_GetGameEvents_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "pkg/game/api/deathroll.proto",
 }

@@ -8,6 +8,7 @@ service GameService {
         rpc AddPlayer (AddPlayerRequest) returns (AddPlayerResponse);
         rpc GetNextPlayer (GetNextPlayerRequest) returns (GetNextPlayerResponse);
         rpc Roll (RollRequest) returns (RollResponse);
+        rpc GetGameEvents (GetGameEventsRequest) returns (stream GetGameEventsResponse);
 }
 //limit describes inital value for deathroll random's upper bound limit
 message StartGameRequest {
@@ -44,4 +45,18 @@ message GetNextPlayerRequest {
 
 message GetNextPlayerResponse {
         uint64 userId = 1;
+}
+
+enum GameEvent {
+        PlayerLost = 0;
+        PlayerWon = 1;
+}
+
+message GetGameEventsRequest {
+
+}
+
+message GetGameEventsResponse {
+        GameEvent event = 1;
+        uint64 userId = 2;
 }

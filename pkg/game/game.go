@@ -11,6 +11,7 @@ type Game struct {
 	players queue
 	actions int
 	limit   int
+	Losers  chan Player
 }
 
 func (g *Game) AddPlayer(p *Player) error {
@@ -58,12 +59,20 @@ func (g *Game) Roll() (uint64, int, error) {
 	}
 	log.Printf("Player %v rolling %d - %d", current, 0, g.limit)
 	roll := rand.Intn(g.limit)
+	//final stage
 	if pc == 2 {
+		if roll == 0 {
+			g.Losers <- *current
+			log.Printf("=====GAME OVER=====")
+			return current.Id, roll, nil
+		}
 		g.limit = roll
 	}
+	//picks a loser after full round
 	if g.actions > 0 && g.actions%pc == 0 && pc > 2 {
 		loser := g.pickLoser()
 		log.Printf("%v lost", loser)
+		g.Losers <- loser
 		g.RemovePlayer(&loser)
 		g.actions = 0
 	}
@@ -90,5 +99,9 @@ func (g *Game) GetPlayers() []Player {
 }
 
 func NewGame(limit int) *Game {
-	return &Game{actions: 0, limit: limit}
+	return &Game{
+		actions: 0,
+		limit:   limit,
+		Losers:  make(chan Player),
+	}
 }

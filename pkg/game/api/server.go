@@ -9,7 +9,15 @@ import (
 )
 
 type Server struct {
-	game *game.Game
+	game   *game.Game
+	Events chan (string)
+}
+
+func NewServer() *Server {
+	return &Server{
+		game:   game.NewGame(1000),
+		Events: make(chan string),
+	}
 }
 
 func (s *Server) StartGame(c context.Context, r *StartGameRequest) (*StartGameResponse, error) {
@@ -39,12 +47,6 @@ func (s *Server) AddPlayer(c context.Context, r *AddPlayerRequest) (*AddPlayerRe
 	}, nil
 }
 func (s *Server) Roll(context.Context, *RollRequest) (*RollResponse, error) {
-	if s.game == nil {
-		log.Errorf("Game is not created")
-		return &RollResponse{
-			Success: false,
-		}, nil
-	}
 	uid, roll, err := s.game.Roll()
 	limit := s.game.GetLimit()
 	if err != nil {
@@ -69,6 +71,24 @@ func (s *Server) GetNextPlayer(context.Context, *GetNextPlayerRequest) (*GetNext
 		return &GetNextPlayerResponse{UserId: 0}, err
 	}
 	return &GetNextPlayerResponse{UserId: next.Id}, nil
+}
+
+func (s *Server) GetGameEvents(r *GetGameEventsRequest, stream GameService_GetGameEventsServer) error {
+	log.Printf("Listening for events")
+	for {
+		select {
+		case e := <-s.game.Losers:
+			log.Infof("Event:Player %v lost", e)
+			event := &GetGameEventsResponse{
+				UserId: e.Id,
+				Event:  GameEvent_PlayerLost,
+			}
+			if err := stream.Send(event); err != nil {
+				return err
+			}
+		}
+	}
+
 }
 
 func (s *Server) mustEmbedUnimplementedGameServiceServer() {
