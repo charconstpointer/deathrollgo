@@ -74,7 +74,7 @@ func TestNextPlayer(t *testing.T) {
 		t.Errorf("%s", err.Error())
 	}
 	next, err = g.NextPlayer()
-	if next.Id != p2.Id {
+	if next.Id != p1.Id {
 		t.Errorf("Wrong order")
 	}
 }

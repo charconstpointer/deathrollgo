@@ -96,10 +96,7 @@ func (g *Game) headsUp(p *Player, roll int) {
 func (g *Game) pickLoser() Player {
 	var loser Player
 	for i, p := range g.players {
-		if i == 0 {
-			loser = p
-		}
-		if p.score < loser.score {
+		if i == 0 || p.score < loser.score {
 			loser = p
 		}
 	}
