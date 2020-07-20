@@ -17,11 +17,20 @@ func NewServer() *Server {
 	return &Server{}
 }
 
-func (s *Server) StartGame(c context.Context, r *StartGameRequest) (*StartGameResponse, error) {
-	s.game = game.NewGame(int(r.Limit))
-	log.Infof("Created new game with limit %d", r.Limit)
+func (s *Server) StartGame(context.Context, *StartGameRequest) (*StartGameResponse, error) {
+	err := s.game.Start()
+	if err != nil {
+		return nil, err
+	}
 	return &StartGameResponse{}, nil
 }
+
+func (s *Server) CreateGame(c context.Context, r *CreateGameRequest) (*CreateGameResponse, error) {
+	s.game = game.NewGame(int(r.Limit))
+	log.Infof("Created new game with limit %d", r.Limit)
+	return &CreateGameResponse{}, nil
+}
+
 func (s *Server) AddPlayer(c context.Context, r *AddPlayerRequest) (*AddPlayerResponse, error) {
 	if s.game == nil {
 		log.Errorf("You cannot add new player to the game that does not exists")
@@ -43,6 +52,7 @@ func (s *Server) AddPlayer(c context.Context, r *AddPlayerRequest) (*AddPlayerRe
 		Added: true,
 	}, nil
 }
+
 func (s *Server) Roll(ctx context.Context, r *RollRequest) (*RollResponse, error) {
 	limit := s.game.GetLimit()
 
@@ -58,6 +68,7 @@ func (s *Server) Roll(ctx context.Context, r *RollRequest) (*RollResponse, error
 		Low:    0,
 	}, nil
 }
+
 func (s *Server) GetNextPlayer(context.Context, *GetNextPlayerRequest) (*GetNextPlayerResponse, error) {
 	if s.game == nil {
 		log.Errorf("You cannot add new player to the game that does not exists")

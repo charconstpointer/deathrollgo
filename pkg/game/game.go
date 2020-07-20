@@ -7,49 +7,75 @@ import (
 	"math/rand"
 )
 
+type GameState int
+
+const (
+	NotStarted GameState = iota + 1
+	InProgress
+	Finished
+)
+
 type queue []Player
 type Game struct {
-	players  queue
-	actions  int
-	limit    int
-	finished bool
-	Losers   chan Player
-	Winner   chan Player
+	players queue
+	actions int
+	limit   int
+	state   GameState
+	Losers  chan Player
+	Winner  chan Player
 }
 
 func NewGame(limit int) *Game {
 	return &Game{
-		actions:  0,
-		finished: false,
-		limit:    limit,
-		Losers:   make(chan Player),
-		Winner:   make(chan Player, 1),
+		actions: 0,
+		state:   NotStarted,
+		limit:   limit,
+		Losers:  make(chan Player),
+		Winner:  make(chan Player, 1),
 	}
 }
 
+//AddPlayer checks if player is already present in the game, if not adds them
+func (g *Game) Start() error {
+	if g.state != NotStarted {
+		return errors.New("You cannot start game that is already in progress or finished")
+	}
+	g.state = InProgress
+	return nil
+}
+
+//AddPlayer checks if player is already present in the game, if not adds them
 func (g *Game) AddPlayer(p *Player) error {
+	if g.state != NotStarted {
+		return errors.New("Can't join a game in progress")
+	}
 	for _, pl := range g.players {
 		if p.Id == pl.Id {
-			return fmt.Errorf("Player is already in the game")
+			return errors.New("Player is already in the game")
 		}
 	}
 	g.players = append(g.players, *p)
 	return nil
 }
 
+//RemovePlayer removes player and decreases action count by one which is
+//required for NextPlayer to work correctly
 func (g *Game) RemovePlayer(p *Player) error {
 	for i, pl := range g.players {
 		if p.Id == pl.Id {
 			g.players = append(g.players[:i], g.players[i+1:]...)
+			g.actions--
 		}
 	}
 	return errors.New("Player not found")
 }
 
+//GetLimit returns current upper bound value for Roll functionality
 func (g *Game) GetLimit() int {
 	return g.limit
 }
 
+//NextPlayer returns player that is expected to make the next Roll
 func (g *Game) NextPlayer() (*Player, error) {
 	pc := len(g.players)
 	if pc == 0 {
@@ -62,8 +88,9 @@ func (g *Game) NextPlayer() (*Player, error) {
 
 }
 
+//Roll generates random roll within given boundary
 func (g *Game) Roll(userId uint64) (int, error) {
-	if g.finished {
+	if g.state == Finished {
 		return 0, errors.New("This game is finished, start a new one to continue")
 	}
 
@@ -106,7 +133,7 @@ func (g *Game) headsUp(p *Player, roll int) {
 		g.RemovePlayer(p)
 		w := g.players[0]
 		g.Winner <- w
-		g.finished = true
+		g.state = Finished
 	}
 	g.actions++
 	g.limit = roll
@@ -122,6 +149,7 @@ func (g *Game) pickLoser() Player {
 	return loser
 }
 
+//Returns all players in the game
 func (g *Game) GetPlayers() []Player {
 	return g.players
 }

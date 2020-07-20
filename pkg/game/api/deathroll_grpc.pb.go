@@ -17,6 +17,7 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GameServiceClient interface {
+	CreateGame(ctx context.Context, in *CreateGameRequest, opts ...grpc.CallOption) (*CreateGameResponse, error)
 	StartGame(ctx context.Context, in *StartGameRequest, opts ...grpc.CallOption) (*StartGameResponse, error)
 	AddPlayer(ctx context.Context, in *AddPlayerRequest, opts ...grpc.CallOption) (*AddPlayerResponse, error)
 	GetNextPlayer(ctx context.Context, in *GetNextPlayerRequest, opts ...grpc.CallOption) (*GetNextPlayerResponse, error)
@@ -30,6 +31,15 @@ type gameServiceClient struct {
 
 func NewGameServiceClient(cc grpc.ClientConnInterface) GameServiceClient {
 	return &gameServiceClient{cc}
+}
+
+func (c *gameServiceClient) CreateGame(ctx context.Context, in *CreateGameRequest, opts ...grpc.CallOption) (*CreateGameResponse, error) {
+	out := new(CreateGameResponse)
+	err := c.cc.Invoke(ctx, "/api.GameService/CreateGame", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *gameServiceClient) StartGame(ctx context.Context, in *StartGameRequest, opts ...grpc.CallOption) (*StartGameResponse, error) {
@@ -104,6 +114,7 @@ func (x *gameServiceGetGameEventsClient) Recv() (*GetGameEventsResponse, error) 
 // All implementations must embed UnimplementedGameServiceServer
 // for forward compatibility
 type GameServiceServer interface {
+	CreateGame(context.Context, *CreateGameRequest) (*CreateGameResponse, error)
 	StartGame(context.Context, *StartGameRequest) (*StartGameResponse, error)
 	AddPlayer(context.Context, *AddPlayerRequest) (*AddPlayerResponse, error)
 	GetNextPlayer(context.Context, *GetNextPlayerRequest) (*GetNextPlayerResponse, error)
@@ -116,6 +127,9 @@ type GameServiceServer interface {
 type UnimplementedGameServiceServer struct {
 }
 
+func (*UnimplementedGameServiceServer) CreateGame(context.Context, *CreateGameRequest) (*CreateGameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateGame not implemented")
+}
 func (*UnimplementedGameServiceServer) StartGame(context.Context, *StartGameRequest) (*StartGameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartGame not implemented")
 }
@@ -135,6 +149,24 @@ func (*UnimplementedGameServiceServer) mustEmbedUnimplementedGameServiceServer()
 
 func RegisterGameServiceServer(s *grpc.Server, srv GameServiceServer) {
 	s.RegisterService(&_GameService_serviceDesc, srv)
+}
+
+func _GameService_CreateGame_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateGameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServiceServer).CreateGame(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.GameService/CreateGame",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServiceServer).CreateGame(ctx, req.(*CreateGameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _GameService_StartGame_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -234,6 +266,10 @@ var _GameService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "api.GameService",
 	HandlerType: (*GameServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateGame",
+			Handler:    _GameService_CreateGame_Handler,
+		},
 		{
 			MethodName: "StartGame",
 			Handler:    _GameService_StartGame_Handler,

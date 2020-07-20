@@ -24,6 +24,7 @@ func main() {
 	if err != nil {
 		log.Errorf("failed to listen: %v", err)
 	}
+
 	s := api.NewServer()
 	gs := grpc.NewServer()
 

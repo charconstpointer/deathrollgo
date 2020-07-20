@@ -4,6 +4,7 @@ package api;
 option go_package = "pkg/game/api";
 
 service GameService {
+        rpc CreateGame (CreateGameRequest) returns (CreateGameResponse);
         rpc StartGame (StartGameRequest) returns (StartGameResponse);
         rpc AddPlayer (AddPlayerRequest) returns (AddPlayerResponse);
         rpc GetNextPlayer (GetNextPlayerRequest) returns (GetNextPlayerResponse);
@@ -11,11 +12,11 @@ service GameService {
         rpc GetGameEvents (GetGameEventsRequest) returns (stream GetGameEventsResponse);
 }
 //limit describes inital value for deathroll random's upper bound limit
-message StartGameRequest {
+message CreateGameRequest {
         int32 limit = 1;
 }
 
-message StartGameResponse {
+message CreateGameResponse {
 
 }
 //userId is unique user's discord identifier
@@ -57,4 +58,10 @@ message GetGameEventsRequest {
 message GetGameEventsResponse {
         GameEvent event = 1;
         uint64 userId = 2;
+}
+
+message StartGameRequest {
+}
+
+message StartGameResponse {
 }
