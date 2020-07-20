@@ -13,8 +13,8 @@ func TestAddPlayer(t *testing.T) {
 		log.Printf("%s", err.Error())
 	}
 	err = g.AddPlayer(p)
-	if err != nil {
-		log.Printf("%s", err.Error())
+	if err == nil {
+		t.Errorf("Expected an error, game cannot contain two players with identical id")
 	}
 	players := g.GetPlayers()
 	if len(players) != 1 {
@@ -50,6 +50,7 @@ func TestGetPlayers(t *testing.T) {
 	if len(players) != 1 {
 		t.Errorf("Expected %d player, found %d", 1, len(players))
 	}
+
 }
 
 func TestNextPlayer(t *testing.T) {
@@ -61,21 +62,19 @@ func TestNextPlayer(t *testing.T) {
 		t.Errorf("Wrong player, expected %d", p1.Id)
 	}
 	p2 := NewPlayer(2)
-	err = g.AddPlayer(p2)
+	g.AddPlayer(p2)
+
+	next, err = g.NextPlayer()
+	if next.Id != p1.Id {
+		t.Errorf("Wrong order, expected %v, got %v", p1, next)
+	}
+	_, err = g.Roll(p1.Id)
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
 	next, err = g.NextPlayer()
-	if next.Id != p1.Id {
-		t.Errorf("Wrong order")
-	}
-	_, _, err = g.Roll()
-	if err != nil {
-		t.Errorf("%s", err.Error())
-	}
-	next, err = g.NextPlayer()
-	if next.Id != p1.Id {
-		t.Errorf("Wrong order")
+	if next.Id != p2.Id {
+		t.Errorf("Wrong order, expected %v, got %v", p2, next)
 	}
 }
 
@@ -91,12 +90,9 @@ func TestRoll(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
-	id, roll, err := g.Roll()
+	roll, err := g.Roll(p1.Id)
 	if err != nil {
 		t.Errorf("%s", err.Error())
-	}
-	if id != p1.Id {
-		t.Errorf("Wrong player, expected %d", p1.Id)
 	}
 
 	if roll < 0 {

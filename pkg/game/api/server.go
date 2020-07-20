@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/charconstpointer/deathrollgo/pkg/game"
 	"github.com/pkg/errors"
@@ -9,15 +10,11 @@ import (
 )
 
 type Server struct {
-	game   *game.Game
-	Events chan (string)
+	game *game.Game
 }
 
 func NewServer() *Server {
-	return &Server{
-		game:   game.NewGame(1000),
-		Events: make(chan string),
-	}
+	return &Server{}
 }
 
 func (s *Server) StartGame(c context.Context, r *StartGameRequest) (*StartGameResponse, error) {
@@ -27,10 +24,10 @@ func (s *Server) StartGame(c context.Context, r *StartGameRequest) (*StartGameRe
 }
 func (s *Server) AddPlayer(c context.Context, r *AddPlayerRequest) (*AddPlayerResponse, error) {
 	if s.game == nil {
-		log.Errorf("Game is not created")
+		log.Errorf("You cannot add new player to the game that does not exists")
 		return &AddPlayerResponse{
 			Added: false,
-		}, nil
+		}, fmt.Errorf("You cannot add new player to the game that does not exists")
 	}
 	p := game.NewPlayer(r.UserId)
 
@@ -39,32 +36,32 @@ func (s *Server) AddPlayer(c context.Context, r *AddPlayerRequest) (*AddPlayerRe
 		log.Errorf("Can't add player #%d, %v", r.UserId, err.Error())
 		return &AddPlayerResponse{
 			Added: false,
-		}, nil
+		}, fmt.Errorf("Can't add player #%d, %v", r.UserId, err.Error())
 	}
 	log.Infof("Adding player #%v", p)
 	return &AddPlayerResponse{
 		Added: true,
 	}, nil
 }
-func (s *Server) Roll(context.Context, *RollRequest) (*RollResponse, error) {
-	uid, roll, err := s.game.Roll()
+func (s *Server) Roll(ctx context.Context, r *RollRequest) (*RollResponse, error) {
 	limit := s.game.GetLimit()
+
+	roll, err := s.game.Roll(r.UserId)
 	if err != nil {
-		log.Errorf("%v", err.Error())
+		return nil, err
 	}
+
 	return &RollResponse{
-		Value:   int32(roll),
-		Success: true,
-		UserId:  uid,
-		High:    int32(limit),
-		Low:     0,
-		Error:   "",
+		Value:  int32(roll),
+		UserId: r.UserId,
+		High:   int32(limit),
+		Low:    0,
 	}, nil
 }
 func (s *Server) GetNextPlayer(context.Context, *GetNextPlayerRequest) (*GetNextPlayerResponse, error) {
 	if s.game == nil {
-		log.Errorf("Game is not created")
-		return nil, errors.Errorf("Game is not created")
+		log.Errorf("You cannot add new player to the game that does not exists")
+		return nil, errors.Errorf("You cannot add new player to the game that does not exists")
 	}
 	next, err := s.game.NextPlayer()
 	if err != nil {
@@ -74,7 +71,10 @@ func (s *Server) GetNextPlayer(context.Context, *GetNextPlayerRequest) (*GetNext
 }
 
 func (s *Server) GetGameEvents(r *GetGameEventsRequest, stream GameService_GetGameEventsServer) error {
-	log.Printf("Listening for events")
+	if s.game == nil {
+		return fmt.Errorf("Create game first in order to listen for game events")
+	}
+
 	for {
 		select {
 		case l := <-s.game.Losers:
@@ -87,7 +87,6 @@ func (s *Server) GetGameEvents(r *GetGameEventsRequest, stream GameService_GetGa
 				return err
 			}
 		case w := <-s.game.Winner:
-			log.Infof("Event:Player %v won", w)
 			event := &GetGameEventsResponse{
 				UserId: w.Id,
 				Event:  GameEvent_PlayerWon,
@@ -95,6 +94,7 @@ func (s *Server) GetGameEvents(r *GetGameEventsRequest, stream GameService_GetGa
 			if err := stream.Send(event); err != nil {
 				return err
 			}
+			return nil
 		}
 	}
 
