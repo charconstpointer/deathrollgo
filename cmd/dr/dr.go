@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+
 	log.SetFormatter(&log.JSONFormatter{})
 
 	lis, err := net.Listen("tcp", "0.0.0.0:8080")
